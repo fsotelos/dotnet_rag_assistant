@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Properties/launchSettings.json
+/bin/Debug/net10.0
+/.vs
+/obj/Debug/net10.0
+/obj/DotNetRag.Api.csproj.nuget.dgspec.json
+/obj/DotNetRag.Api.csproj.nuget.g.props
+/obj/DotNetRag.Api.csproj.nuget.g.targets
+/obj/project.assets.json
+/obj/project.nuget.cache
