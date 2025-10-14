@@ -1,0 +1,114 @@
+﻿@using System.Net.Http.Json
+@using WebChat.Client.Services
+
+
+<div class="max-w-lg mx-auto mt-6">
+    <h3 class="mb-3 font-semibold text-xl text-center">💬 AI Chat</h3>
+
+    <div class="chat-window border rounded-2xl p-4 h-96 overflow-y-auto bg-gray-50 shadow-inner" @ref="chatContainer">
+        @foreach (var message in Messages)
+        {
+            <div class="mb-3">
+                @if (message.IsUser)
+                {
+                    <div class="text-right">
+                        <span class="inline-block bg-blue-600 text-white px-3 py-2 rounded-2xl shadow">
+                            @message.Text
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-left">
+                        <span class="inline-block bg-gray-200 text-gray-900 px-3 py-2 rounded-2xl shadow">
+                            @message.Text
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="flex mt-3">
+        <input @bind="UserInput"
+               @bind:event="oninput"
+               placeholder="Ask something..."
+               class="flex-grow border border-gray-300 rounded-2xl p-2 px-4"
+               @onkeypress="HandleKeyPress" />
+
+        <button class="ml-2 bg-blue-600 text-white px-5 py-2 rounded-2xl shadow hover:bg-blue-700 disabled:opacity-50"
+                @onclick="SendMessage"
+                disabled="@IsLoading">
+            @(IsLoading ? "..." : "Send")
+        </button>
+    </div>
+</div>
+
+@code {
+    private List<ChatMessage> Messages = new();
+    private string UserInput = string.Empty;
+    private bool IsLoading = false;
+    private ElementReference chatContainer;
+    
+
+    public async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(UserInput)) return;
+
+        var prompt = UserInput.Trim();
+        Messages.Add(new ChatMessage { Text = prompt, IsUser = true });
+        UserInput = string.Empty;
+        IsLoading = true;
+        StateHasChanged();
+
+        await ScrollToBottomAsync();
+
+        try
+        {
+            var client = new UploadApiClient();
+            var response = await client.Chat(prompt ?? string.Empty);
+
+            if (response is ChatMessage { Text: not null} result)
+            {
+                Messages.Add(result);
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Messages.Add(new ChatMessage { Text = $"❌ {ex.Message}", IsUser = false });
+        }
+
+        IsLoading = false;
+        StateHasChanged();
+        await ScrollToBottomAsync();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !IsLoading)
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task ScrollToBottomAsync()
+    {
+        await Task.Delay(50);
+        await chatContainer.FocusAsync();
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", chatContainer);
+    }
+
+    public class ChatMessage
+    {
+        public string Text { get; set; } = string.Empty;
+        public bool IsUser { get; set; }
+    }
+
+    public class ChatResponse
+    {
+        public string Answer { get; set; } = string.Empty;
+    }
+
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+}

@@ -5,13 +5,13 @@ namespace DotNetRag.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ChatController(GeminiAIService _geminiAIService) : ControllerBase
+    public class ChatController(RagService ragService) : ControllerBase
     {
         
         [HttpPost("ask")]
-        public IActionResult Ask([FromQuery] string prompt)
+        public IActionResult Ask([FromForm] string question)
         {
-            return _geminiAIService.GenerateContentAsync(prompt) is Task<string> answer
+            return ragService.MakeQuestion(question) is Task<string> answer
                 ? Ok(new { Answer = answer.Result })
                 : BadRequest("Error processing the request.");
         }

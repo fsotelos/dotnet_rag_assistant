@@ -1,12 +1,11 @@
-﻿using DotNetRag.Api.Models;
-using DotNetRag.Api.Services;
+﻿using DotNetRag.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotNetRag.Api.Controllers
 {
     [ApiController]                     
     [Route("api/[controller]")]
-    public class FileController(ITempFileCache _tempFileCache) : ControllerBase
+    public class FileController(RagService rag) : ControllerBase
     {
       
 
@@ -20,20 +19,15 @@ namespace DotNetRag.Api.Controllers
             {
                 if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                     return BadRequest($"File '{file.FileName}' is not a PDF.");
-
+               
                 using var ms = new MemoryStream();
                 await file.CopyToAsync(ms);
-              
-                var content = PDFService.ExtractContentFromPDF(file.Name);
-                var entry = new TempFileEntry
-                {
-                    FileName = file.FileName,
-                    Content = content,
-                    UploadedAt = DateTime.UtcNow
-                };
-                await _tempFileCache.AddFileAsync(sessionId, entry);
-            }
+                var fileBytes = ms.ToArray();
 
+                string text = PDFService.ExtractTextFromPDF(fileBytes);
+
+                await rag.LoadInfoAsync(text); 
+            }
             return Ok(new { files.Count, Message = "Files uploaded and processed successfully." });
         }
     }

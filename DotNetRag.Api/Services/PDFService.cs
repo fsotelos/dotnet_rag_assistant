@@ -1,18 +1,27 @@
-﻿using System.IO;
+﻿using Docnet.Core;
+using Docnet.Core.Models;
+using System.Text;
 
 
 namespace DotNetRag.Api.Services
 {
     public class PDFService
     {
-        public static byte[] ExtractContentFromPDF(string filePath)
+        public static string ExtractTextFromPDF(byte[] content)
         {
-            var pdf = IronPdf.PdfDocument.FromFile(filePath);
-
-            //get text from pdf
-            var text = pdf.ExtractAllText();
-
-            return System.Text.Encoding.UTF8.GetBytes(text);
+            using (var docReader = DocLib.Instance.GetDocReader(content, new PageDimensions()))
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (var i = 0; i < docReader.GetPageCount(); i++)
+                {
+                    using (var pageReader = docReader.GetPageReader(i))
+                    {
+                        var text = pageReader.GetText();
+                        stringBuilder.AppendLine(text);
+                    }
+                }
+                return stringBuilder.ToString();
+            }
 
         }
     }

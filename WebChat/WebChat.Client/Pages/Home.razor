@@ -1,0 +1,108 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@using WebChat.Client.Components
+@using WebChat.Client.Model
+@using WebChat.Client.Services
+
+<h3 class="text-xl font-semibold mb-3">Upload PDF Files</h3>
+
+<div class="p-4 border rounded-2xl shadow-sm bg-white max-w-lg">
+    <InputFile OnChange="OnInputFileChange" multiple accept=".pdf" />
+
+    <div class="mt-4">
+        <h5 class="font-semibold mb-2">Selected Files:</h5>
+        @if (selectedFiles.Count == 0)
+        {
+            <p class="text-gray-500">No files selected.</p>
+        }
+        else
+        {
+            <ul class="list-disc ml-5">
+                @foreach (var file in selectedFiles)
+                {
+                    <li class="flex justify-between items-center mb-1">
+                        <span>@file.FileName</span>
+                        <button class="text-red-500 hover:text-red-700" @onclick="() => RemoveFile(file)">
+                            Remove
+                        </button>
+                    </li>
+                }
+            </ul>
+
+            <button class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-2xl hover:bg-blue-700"
+                    @onclick="UploadFilesAsync">
+                Upload All
+            </button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="mt-3 text-sm text-green-700">@statusMessage</div>
+    }
+    <ChatWindow />
+</div>
+
+@code {
+    private List<LocalFile> selectedFiles = new();
+    private string? statusMessage;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (file.ContentType == "application/pdf")
+            {
+                using var stream = file.OpenReadStream(10 * 1024 * 1024); // 10 MB
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+
+                selectedFiles.Add(new LocalFile
+                {
+                    FileName = file.Name,
+                    Content = ms.ToArray()
+                });
+            }
+        }
+
+        // ✅ Force UI refresh after loading files
+        StateHasChanged();
+    }
+
+    private void RemoveFile(LocalFile file)
+    {
+        selectedFiles.Remove(file);
+    }
+
+    private async Task UploadFilesAsync()
+    {
+        if (selectedFiles.Count == 0)
+        {
+            statusMessage = "No files to upload.";
+            return;
+        }
+
+        try
+        {
+            var client = new UploadApiClient();
+            var response = await client.UploadFilesAsync(selectedFiles, "1");
+
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = "Upload successful!";
+                selectedFiles.Clear();
+            }
+            else
+            {
+                statusMessage = $"Upload failed: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+
+        // ✅ Refresh status message
+        StateHasChanged();
+    }
+}

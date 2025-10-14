@@ -1,18 +1,25 @@
-﻿using DotNetRag.Api.Services;
+﻿using DotNetRag.Api.Utils;
 
 namespace DotNetRag.Api.Services;
-public class RagService(GeminiAIService ai, QdrantService qdrant)
+public class RagService(GeminiAIService ai, RedisService cache)
 {
-  
-
-    public async Task<string> AskAsync()
+    public async Task<string> LoadInfoAsync(string text)
     {
-        //var qEmbedding = await _ai.CreateEmbeddingAsync(question);
-        //var contextDocs = await _qdrant.SearchAsync(qEmbedding);
-        //var context = string.Join("\n", contextDocs);
+        var chunks = TextChunker.SplitTextIntoWordChunks(text, 800);
 
-        //var prompt = $"Usa el siguiente contexto para responder:\n{context}\n\nPregunta: {question}";
-        //return await _ai.GenerateAnswerAsync(prompt);
+        foreach (var (index, chunk) in chunks.Select((c, i) => (i, c)))
+        {
+            var embedding = await ai.GetEmbeddingAsync(chunk);
+            await cache.SaveDocumentAsync($"doc:{index}", chunk, embedding);
+        }
         return null!;
     }
+
+    public async Task<string?> MakeQuestion(string question) {
+        var embedding = await ai.GetEmbeddingAsync(question);
+        var doc = await cache.GetSimilarDocumentsAsync(embedding, 3);
+        var prompt = $"Use the next context to response:\n{doc.MinBy(x=>x.Score).Content}\n\nQuestion: {question}";
+        return await ai.GenerateContentAsync(prompt);
+    }
+
 }
