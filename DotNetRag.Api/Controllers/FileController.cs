@@ -7,8 +7,6 @@ namespace DotNetRag.Api.Controllers
     [Route("api/[controller]")]
     public class FileController(RagPdfGemini rag) : ControllerBase
     {
-      
-
         [HttpPost("upload-multiple")]
         public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] string sessionId)
         {

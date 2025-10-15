@@ -3,7 +3,6 @@
     using Microsoft.Extensions.AI;
     using System;
     using System.Net.Http;
-    using System.Text;
     using System.Text.Json;
     using System.Threading.Tasks;
 
@@ -29,12 +28,11 @@
 
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
-            // Construct the payload for your 'ask' endpoint
             var lastText = messages
                         .Last()
                         .Contents
-                        .OfType<TextContent>()   // filters only text-type contents
-                        .FirstOrDefault()?.Text; // gets the first text
+                        .OfType<TextContent>()   
+                        .FirstOrDefault()?.Text; 
 
 
             var url = $"chat/ask";
@@ -45,16 +43,21 @@
            
             response.EnsureSuccessStatusCode();
 
-            // Read and deserialize the API response
+            
             var apiResponse =  response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            // Assuming your API returns a simple string response
+            
             var responseText = apiResponse;
 
-            // Yield the response back to the chat UI
-            yield return new ChatResponseUpdate(ChatRole.Assistant, responseText);
+            string json = responseText;
+
+            var result = JsonSerializer.Deserialize<JsonElement>(json);
+
+            string formattedText = result.GetProperty("answer").GetString();
+
+            yield return new ChatResponseUpdate(ChatRole.Assistant, formattedText);
         }
 
-        // Other IChatClient methods can be left unimplemented or customized
+        
     }
 
 }

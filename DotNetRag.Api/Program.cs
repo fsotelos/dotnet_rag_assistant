@@ -1,4 +1,4 @@
-using StackExchange.Redis;
+using DotNetRag.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,9 +18,6 @@ if (string.IsNullOrWhiteSpace(geminiAiKey))
     throw new InvalidOperationException("GEMINI_API_KEY environment variable is not set.");
 }
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(redisConnectionString));
  
 builder.Services.AddTransient(_ => new GeminiService(geminiAiKey));
 builder.Services.AddTransient(_ => new DocumentStore("vector_store.json"));

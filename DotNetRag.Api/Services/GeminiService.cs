@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 
+namespace DotNetRag.Api.Services;
 public class GeminiService
 {
     private readonly HttpClient _http;

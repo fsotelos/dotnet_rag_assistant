@@ -1,4 +1,7 @@
-﻿public class RagPdfGemini
+﻿using DotNetRag.Api.Models;
+
+namespace DotNetRag.Api.Services;
+public class RagPdfGemini
 {
     private readonly GeminiService _gem;
     private readonly DocumentStore _store;

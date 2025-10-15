@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using DotNetRag.Api.Models;
+using System.Text.Json;
 
+namespace DotNetRag.Api.Services;
 public class DocumentStore
 {
     private readonly string _path;

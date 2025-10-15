@@ -54,7 +54,7 @@
     protected override void OnInitialized()
     {
         statefulMessageCount = 0;
-        messages.Add(new(ChatRole.System, SystemPrompt));
+        messages.Add(new(ChatRole.System, string.Empty));
         chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
     }
 

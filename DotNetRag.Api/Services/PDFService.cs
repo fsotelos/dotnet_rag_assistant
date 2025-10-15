@@ -2,27 +2,25 @@
 using Docnet.Core.Models;
 using System.Text;
 
+namespace DotNetRag.Api.Services;
 
-namespace DotNetRag.Api.Services
+public class PDFService
 {
-    public class PDFService
+    public static string ExtractTextFromPDF(byte[] content)
     {
-        public static string ExtractTextFromPDF(byte[] content)
+        using (var docReader = DocLib.Instance.GetDocReader(content, new PageDimensions()))
         {
-            using (var docReader = DocLib.Instance.GetDocReader(content, new PageDimensions()))
+            StringBuilder stringBuilder = new StringBuilder();
+            for (var i = 0; i < docReader.GetPageCount(); i++)
             {
-                StringBuilder stringBuilder = new StringBuilder();
-                for (var i = 0; i < docReader.GetPageCount(); i++)
+                using (var pageReader = docReader.GetPageReader(i))
                 {
-                    using (var pageReader = docReader.GetPageReader(i))
-                    {
-                        var text = pageReader.GetText();
-                        stringBuilder.AppendLine(text);
-                    }
+                    var text = pageReader.GetText();
+                    stringBuilder.AppendLine(text);
                 }
-                return stringBuilder.ToString();
             }
-
+            return stringBuilder.ToString();
         }
+
     }
 }
