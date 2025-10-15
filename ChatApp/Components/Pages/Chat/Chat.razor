@@ -9,7 +9,8 @@
 
 <PageTitle>Chat</PageTitle>
 
-<ChatHeader OnNewChat="@ResetConversationAsync" OnFilesUploaded="@HandleFilesUploaded" />
+<ChatHeader OnNewChat="@ResetConversationAsync"
+            OnFilesUploaded="@HandleFilesUploaded" />
 
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
