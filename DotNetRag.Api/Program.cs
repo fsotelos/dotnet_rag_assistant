@@ -1,4 +1,3 @@
-using DotNetRag.Api.Services;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,9 +22,9 @@ var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(redisConnectionString));
  
-builder.Services.AddTransient(_ => new GeminiAIService(url, geminiAiKey));
-builder.Services.AddSingleton<RedisService>();
-builder.Services.AddSingleton<RagService>();
+builder.Services.AddTransient(_ => new GeminiService(geminiAiKey));
+builder.Services.AddTransient(_ => new DocumentStore("vector_store.json"));
+builder.Services.AddTransient<RagPdfGemini>();
 
 builder.Services.AddControllers();
 

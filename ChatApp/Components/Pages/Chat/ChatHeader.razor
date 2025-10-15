@@ -1,0 +1,64 @@
+@using WebChat.Client.Model
+<div class="chat-header-container main-background-gradient">
+    <div class="chat-header-controls page-width">
+        <button class="btn-default" @onclick="@OnNewChat">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="new-chat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New chat
+        </button>
+
+        <div class="chat-header-controls page-width">
+            <button class="btn-default" @onclick="@OnFileUpload">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="new-chat-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Upload Context Files
+            </button>
+            <InputFile OnChange="OnInputFileChange"
+                       id="contextFileInput"
+                       multiple
+                       style="display:none" />
+        </div>
+    </div>
+
+    <h1 class="page-width">ChatApp</h1>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnNewChat { get; set; }
+
+    [Parameter] public EventCallback<List<LocalFile>> OnFilesUploaded { get; set; }
+
+    private List<LocalFile> selectedFiles = new();
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles.Clear();
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (file.ContentType == "application/pdf")
+            {
+                using var stream = file.OpenReadStream(10 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+
+                selectedFiles.Add(new LocalFile
+                {
+                    FileName = file.Name,
+                    Content = ms.ToArray()
+                });
+            }
+        }
+
+        // ?? Propagate event to parent page
+        await OnFilesUploaded.InvokeAsync(selectedFiles);
+    }
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+    private async Task OnFileUpload()
+    {
+        await JSRuntime.InvokeVoidAsync("triggerFileUpload", "#contextFileInput");
+    }
+}

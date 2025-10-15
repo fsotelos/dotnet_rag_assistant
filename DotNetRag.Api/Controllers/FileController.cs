@@ -5,7 +5,7 @@ namespace DotNetRag.Api.Controllers
 {
     [ApiController]                     
     [Route("api/[controller]")]
-    public class FileController(RagService rag) : ControllerBase
+    public class FileController(RagPdfGemini rag) : ControllerBase
     {
       
 
@@ -26,7 +26,7 @@ namespace DotNetRag.Api.Controllers
 
                 string text = PDFService.ExtractTextFromPDF(fileBytes);
 
-                await rag.LoadInfoAsync(text); 
+                await rag.LoadPdfAndIndex(text);
             }
             return Ok(new { files.Count, Message = "Files uploaded and processed successfully." });
         }
